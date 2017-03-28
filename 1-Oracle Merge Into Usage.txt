@@ -1,0 +1,51 @@
+业务逻辑，需要先判断一条记录在数据库中是否有存在，若存在则更新该记录，若不存在则插入记录
+常见的实现方式，效率和代码量都不够最优。再此介绍Oracle9i以上提供的实现方式:
+
+案例: 批量更新ASSET表(数据量接近3000万)
+
+PROCEDURE running_report_job (
+	report_result OUT VARCHAR
+) 
+AS
+	type rowid_list is table of urowid index by binary_integer;
+    v_rowids rowid_list;
+    i number;
+    cursor cursor_rowids is select rowid from asset where parent_asset_id is null and asset_status_id < 3;
+BEGIN
+
+	open cursor_rowids;
+	loop
+		fetch cursor_rowids bulk collect into v_rowids limit 100;
+			forall i in 1..v_rowids.count
+        		MERGE INTO event_duration_report t
+				USING (
+				  SELECT a.ASSET_ID, a.SOURCE_SYSTEM_ID, 
+				        nvl(ceil(a.ACTIVITY_END_DT - a.ACTIVITY_START_DT), 0) as EVENT_DAYS,
+				        nvl(ceil(a.SALES_END_DT- a.SALES_START_DT), 0) as SALES_DAYS,
+				        nvl(ceil(a.ACTIVITY_START_DT - a.CREATED_DT), 0) as EVENT_START_DAYS,
+				        nvl(ceil(a.ACTIVITY_END_DT - a.CREATED_DT), 0) as EVENT_END_DAYS,
+				        nvl(ceil(a.ACTIVITY_START_DT - a.SALES_START_DT), 0) as EVENT_SALES_START_DAYS,
+				        SYSDATE as CREATED_DT,
+				        SYSDATE as MODIFIED_DT
+				  FROM ASSET a where rowid = v_rowids(i)
+				) p
+				ON (t.asset_id = p.asset_id)
+				WHEN MATCHED THEN 
+				UPDATE SET t.EVENT_DAYS = p.EVENT_DAYS, t.SALES_DAYS = p.SALES_DAYS, t.EVENT_START_DAYS = p.EVENT_START_DAYS, 
+				t.EVENT_END_DAYS = p.EVENT_END_DAYS, t.EVENT_SALES_START_DAYS = p.EVENT_SALES_START_DAYS, t.MODIFIED_DT = p.MODIFIED_DT  
+				WHEN NOT MATCHED THEN 
+				  INSERT (t.ASSET_ID, t.SOURCE_SYSTEM_ID, t.EVENT_DAYS, t.SALES_DAYS, t.EVENT_START_DAYS,
+				   t.EVENT_END_DAYS, t.EVENT_SALES_START_DAYS, t.CREATED_DT, t.MODIFIED_DT) 
+				  values (p.ASSET_ID, p.SOURCE_SYSTEM_ID, p.EVENT_DAYS, p.SALES_DAYS, p.EVENT_START_DAYS,
+				   p.EVENT_END_DAYS, p.EVENT_SALES_START_DAYS, p.CREATED_DT, p.MODIFIED_DT);
+        		
+			commit;
+
+	exit when cursor_rowids%notfound;
+	end loop;
+
+	close cursor_rowids;
+
+    report_result := 'success';
+
+END;
