@@ -46,6 +46,6 @@ BEGIN
 
 	close cursor_rowids;
 
-    report_result := 'success';
+        report_result := 'success';
 
 END;
