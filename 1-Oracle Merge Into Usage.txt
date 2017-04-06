@@ -1,7 +1,8 @@
 业务逻辑，需要先判断一条记录在数据库中是否有存在，若存在则更新该记录，若不存在则插入记录
 常见的实现方式，效率和代码量都不够最优。再此介绍Oracle9i以上提供的实现方式:
 
-案例: 批量更新ASSET表(数据量接近3000万)
+案例: 采集计算ASSET表产生Report(event_duration_report), 其中ASSET表数据量接近3000万，
+为了减少Oracle的压力采用bulk collect into 分批处理；
 
 PROCEDURE running_report_job (
 	report_result OUT VARCHAR
