@@ -7,7 +7,7 @@ PROCEDURE running_report_job (
 	report_result OUT VARCHAR
 ) 
 AS
-	type rowid_list is table of urowid index by binary_integer;
+    type rowid_list is table of urowid index by binary_integer;
     v_rowids rowid_list;
     i number;
     cursor cursor_rowids is select rowid from asset where parent_asset_id is null and asset_status_id < 3;
