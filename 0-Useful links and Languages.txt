@@ -1,9 +1,4 @@
 Links:
-Google Hosts: https://github.com/racaljk/hosts
+https://github.com/alibaba
 OpenResty:    https://github.com/openresty
 Nginx:        http://nginx.org/
-
-Concern Languages:
-
-Lua:
-Go:
