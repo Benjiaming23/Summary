@@ -5,3 +5,8 @@ ps aux | grep PID
 ps -mp pid -o THREAD,tid,time
 printf "%x\n" tid
 jstack pid |grep tid -A XX
+
+
+2.动态代理
+JDK原生动态代理是Java原生支持的，不需要任何外部依赖，但是它只能基于接口进行代理；
+CGLIB通过继承的方式进行代理，无论目标对象有没有实现接口都可以代理，但是无法处理final的情况
