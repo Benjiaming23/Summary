@@ -1,0 +1,7 @@
+Java Application Issue:
+
+1.High CPU:
+ps aux | grep PID
+ps -mp pid -o THREAD,tid,time
+printf "%x\n" tid
+jstack pid |grep tid -A XX
